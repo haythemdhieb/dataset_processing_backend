@@ -73,7 +73,7 @@ async def get_dataset(dataset_id: str):
 
 @dataset_router.delete("/datasets/{dataset_id}/")
 async def delete_dataset(dataset_id: str):
-    """DELETE /datasets/<id>/ - Supprimer un dataset"""
+    """DELETE /datasets/<id>/ - Delete dataset"""
     try:
         if not dataset_manager.get_dataset(dataset_id):
             raise HTTPException(status_code=404, detail="Dataset not found")
