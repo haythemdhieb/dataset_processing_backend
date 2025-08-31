@@ -140,7 +140,17 @@ class DatasetManager:
         raise NotImplementedError
 
     def list_datasets(self) -> List[Dataset]:
-        raise NotImplementedError
+        """Lister tous les datasets"""
+        metadata = self._load_metadata()
+        datasets = []
+        
+        for _, dataset_data in metadata.items():
+            dataset = Dataset.from_dict(dataset_data)
+            print(dataset_data)
+            datasets.append(dataset)
+        
+        return datasets
+    
 
     def delete_dataset(self, dataset_id: str) -> bool:
         """Delete a dataset and its associated files."""

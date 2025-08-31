@@ -17,6 +17,14 @@ def allowed_file(filename: str) -> bool:
     """Vérifier si l'extension du fichier est autorisée"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+@dataset_router.get("/datasets/")
+async def list_datasets():
+    """GET /datasets/ - List all uploaded datasets"""
+    try:
+        datasets = dataset_manager.list_datasets()
+        return [dataset.to_dict() for dataset in datasets]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @dataset_router.post("/datasets/")
 async def create_dataset(file: UploadFile = File(...)):
