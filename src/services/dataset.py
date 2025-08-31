@@ -24,14 +24,12 @@ class Dataset:
         self,
         id: str = None,
         filename: str = None,
-        original_filename: str = None,
         file_size: int = None,
         upload_date: datetime = None,
         data_path: str = None,
     ):
         self.id = id or str(uuid.uuid4())
         self.filename = filename
-        self.original_filename = original_filename
         self.file_size = file_size
         self.upload_date = upload_date or datetime.utcnow()
         self.data_path = data_path
@@ -41,9 +39,19 @@ class Dataset:
         return {
             "id": self.id,
             "filename": self.filename,
-            "original_filename": self.original_filename,
             "file_size": self.file_size,
             "upload_date": self.upload_date.isoformat() if self.upload_date else None,
+            "data_path" : self.data_path
+        }
+    
+    def to_summary_dict(self) -> dict:
+        """
+        Return only the fields needed for listing in the API:
+        filename and file_size
+        """
+        return {
+            "filename": self.filename,
+            "file_size": self.file_size
         }
 
     @classmethod
@@ -56,7 +64,6 @@ class Dataset:
         return cls(
             id=data.get("id"),
             filename=data.get("filename"),
-            original_filename=data.get("original_filename"),
             file_size=data.get("file_size"),
             upload_date=upload_date,
             data_path=data.get("data_path"),
@@ -121,23 +128,27 @@ class DatasetManager:
         dataset_id = str(uuid.uuid4())
         dataset = Dataset(
             id=dataset_id,
-            filename=f"{uuid.uuid4()}_{original_filename}",
-            original_filename=original_filename,
+            filename=original_filename,
             file_size=file_size,
         )
         dataset.data_path = str(self.data_dir / f"{dataset.id}.pkl")
         dataset.save_dataframe(df)
         metadata = self._load_metadata()
         metadata[dataset.id] = dataset.to_dict()
-        metadata[dataset.id]["data_path"] = dataset.data_path
         self._save_metadata(metadata)
 
         logger.info(f"Dataset {dataset.id} created successfully.")
         return dataset
 
     def get_dataset(self, dataset_id: str) -> Optional[Dataset]:
-        """Retrieve a dataset by its ID."""
-        raise NotImplementedError
+        """Retrieve a dataset using ID"""
+        metadata = self._load_metadata()
+        if dataset_id not in metadata:
+            return None
+        
+        dataset_data = metadata[dataset_id]
+        dataset = Dataset.from_dict(dataset_data)
+        return dataset
 
     def list_datasets(self) -> List[Dataset]:
         """Lister tous les datasets"""
@@ -146,7 +157,6 @@ class DatasetManager:
         
         for _, dataset_data in metadata.items():
             dataset = Dataset.from_dict(dataset_data)
-            print(dataset_data)
             datasets.append(dataset)
         
         return datasets
@@ -154,4 +164,4 @@ class DatasetManager:
 
     def delete_dataset(self, dataset_id: str) -> bool:
         """Delete a dataset and its associated files."""
-        raise NotImplementedError
+        
