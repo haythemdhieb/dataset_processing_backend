@@ -70,7 +70,12 @@ class Dataset:
         )
 
     def get_dataframe(self) -> pd.DataFrame:
-        raise NotImplementedError
+        """Store files in locally"""
+        try:
+            with open(self.data_path, 'rb') as f:
+                return pickle.load(f)
+        except Exception as e:
+            raise Exception(f"Error while reading dataframe: {str(e)}")
     
     def save_dataframe(self, df: pd.DataFrame):
         """Save a pandas DataFrame to disk."""
