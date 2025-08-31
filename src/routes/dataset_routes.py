@@ -1,4 +1,4 @@
-from fastapi import File, UploadFile, HTTPException
+from fastapi import File, Response, UploadFile, HTTPException
 from fastapi import APIRouter
 import pandas as pd
 import io
@@ -86,3 +86,32 @@ async def delete_dataset(dataset_id: str):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+@dataset_router.get("/datasets/{dataset_id}/excel/")
+async def export_excel(dataset_id: str):
+    """GET /datasets/<id>/excel/ - Exporter dataset in Excel fromat"""
+    try:
+        dataset = dataset_manager.get_dataset(dataset_id)
+        if not dataset:
+            raise HTTPException(status_code=404, detail="Dataset non trouvé")
+        
+        df = dataset.get_dataframe()
+        
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Data')
+        
+        output.seek(0)
+        
+        excel_filename = f"{dataset.filename.rsplit('.', 1)[0]}.xlsx"
+        
+        return Response(
+            content=output.getvalue(),
+            media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            headers={"Content-Disposition": f"attachment; filename={excel_filename}"}
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
