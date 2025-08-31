@@ -89,8 +89,12 @@ class Dataset:
             raise
 
     def delete_files(self):
-        """Delete associated data files from disk."""
-        raise NotImplementedError
+        """Supprimer les fichiers associés du disque"""
+        try:
+            if os.path.exists(self.data_path):
+                os.remove(self.data_path)
+        except Exception as e:
+            logger.error(f"Error deleting files in {self.data_path}: {str(e)}")
     
 class DatasetManager:
     """

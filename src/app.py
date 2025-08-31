@@ -20,7 +20,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(dataset_routes.dataset_router, tags=["csv_dataset"], prefix="/datasets")
+app.include_router(dataset_routes.dataset_router, tags=["csv_dataset"], prefix="/dataset")
 
 @app.get("/")
 async def root():
