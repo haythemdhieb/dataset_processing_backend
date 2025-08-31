@@ -1,22 +1,24 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException, Response
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi import File, UploadFile, HTTPException
 from fastapi import APIRouter
 import pandas as pd
 import io
 from services.dataset import DatasetManager
 from typing import List
+from utils.helpers import allowed_file
 
 dataset_router = APIRouter()
 
 dataset_manager = DatasetManager()
 
-ALLOWED_EXTENSIONS = {'csv'}
 
-def allowed_file(filename: str) -> bool:
-    """Vérifier si l'extension du fichier est autorisée"""
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
+@dataset_router.get("/datasets/")
+async def list_datasets():
+    """GET /datasets/ - List all uploaded datasets"""
+    try:
+        datasets = dataset_manager.list_datasets()
+        return [dataset.to_dict() for dataset in datasets]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @dataset_router.post("/datasets/")
 async def create_dataset(file: UploadFile = File(...)):
@@ -52,6 +54,35 @@ async def create_dataset(file: UploadFile = File(...)):
             'message': 'Dataset create with success',
             'dataset': dataset.to_dict()
         }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@dataset_router.get("/datasets/{dataset_id}/")
+async def get_dataset(dataset_id: str):
+    """GET /datasets/<id>/ - Retrieve a specific dataset"""
+    try:
+        dataset = dataset_manager.get_dataset(dataset_id)
+        if not dataset:
+            raise HTTPException(status_code=404, detail="Dataset non trouvé")
+        
+        return dataset.to_summary_dict()
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@dataset_router.delete("/datasets/{dataset_id}/")
+async def delete_dataset(dataset_id: str):
+    """DELETE /datasets/<id>/ - Delete dataset"""
+    try:
+        if not dataset_manager.get_dataset(dataset_id):
+            raise HTTPException(status_code=404, detail="Dataset not found")
+        
+        success = dataset_manager.delete_dataset(dataset_id)
+        if not success:
+            raise HTTPException(status_code=500, detail="Error while deleting dataset")
+        
+        return {'message': 'dataset deleted'}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
