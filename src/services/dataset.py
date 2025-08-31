@@ -163,5 +163,18 @@ class DatasetManager:
     
 
     def delete_dataset(self, dataset_id: str) -> bool:
-        """Delete a dataset and its associated files."""
+        """Supprimer un dataset"""
+        dataset = self.get_dataset(dataset_id)
+        if not dataset:
+            return False
         
+        # Supprimer les fichiers
+        dataset.delete_files()
+        
+        # Supprimer des métadonnées
+        metadata = self._load_metadata()
+        if dataset_id in metadata:
+            del metadata[dataset_id]
+            self._save_metadata(metadata)
+        
+        return True

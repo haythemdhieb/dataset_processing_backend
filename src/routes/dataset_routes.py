@@ -70,3 +70,19 @@ async def get_dataset(dataset_id: str):
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@dataset_router.delete("/datasets/{dataset_id}/")
+async def delete_dataset(dataset_id: str):
+    """DELETE /datasets/<id>/ - Supprimer un dataset"""
+    try:
+        if not dataset_manager.get_dataset(dataset_id):
+            raise HTTPException(status_code=404, detail="Dataset not found")
+        
+        success = dataset_manager.delete_dataset(dataset_id)
+        if not success:
+            raise HTTPException(status_code=500, detail="Error while deleting dataset")
+        
+        return {'message': 'dataset deleted'}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
