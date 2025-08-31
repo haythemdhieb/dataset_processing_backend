@@ -73,6 +73,7 @@ async def delete_dataset(dataset_id: str):
     """Delete a dataset"""
     try:
         dataset = dataset_manager.get_dataset(dataset_id)
+        print(dataset.to_dict())
         if not dataset:
             raise HTTPException(status_code=404, detail="Dataset not found")
 
